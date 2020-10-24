@@ -1,4 +1,4 @@
-FROM denismakogon/ffmpeg-alpine:4.0-buildstage as build-stage
+FROM bsanborn/ffmpeg-alpine:4.0-buildstage as build-stage
 FROM alpine:3.7
 
 COPY --from=build-stage /tmp/fakeroot/bin /usr/local/bin
