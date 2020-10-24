@@ -1,4 +1,4 @@
-FROM        bsanborn/ffmpeg-alpine:4.0-dependencies AS build-stage
+FROM        ehendrix23/ffmpeg-alpine:4.0-dependencies AS build-stage
 FROM        alpine:3.7
 WORKDIR     /tmp/workdir
 
