@@ -30,7 +30,7 @@ RUN     buildDeps="autoconf \
                    tar \
                    yasm \
                    zlib-dev" && \
-        apk  add --no-cache ${buildDeps} libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0
+        apk  add --no-cache ${buildDeps} libva-dev libdrm-dev libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0
 
 COPY --from=build-stage ${PREFIX}/bin ${PREFIX}/bin
 COPY --from=build-stage ${PREFIX}/lib ${PREFIX}/lib
@@ -55,7 +55,6 @@ RUN  \
         --enable-libass \
         --enable-libfreetype \
         --enable-libvidstab \
-        --enable-libmfx \
         --enable-libmp3lame \
         --enable-libopenjpeg \
         --enable-libopus \
