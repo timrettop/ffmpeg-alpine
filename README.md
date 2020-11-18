@@ -16,7 +16,7 @@ However with a lot changes like:
 ## Build stage
 
 [Build-stage image](build-stage) contains only build of an FFMPEG with a copy of shared objects from the dependency image.
-Image size: 951MM
+Image size: 951MB
 
 ## Runtime
 
