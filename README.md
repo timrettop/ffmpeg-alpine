@@ -1,12 +1,13 @@
-# FFMPEG Linux Alpine 3.7 Docker images
+# FFMPEG Linux Alpine 3.12 Docker images
 
 These images were heavily inspired by [this image](https://hub.docker.com/r/jrottenberg/ffmpeg/).
 However with a lot changes like:
 
  - no more single Dockerfile (3 image layers: dependencies, build-stage, runtime)
  - no more forced multi-stage builds except those cases when final stage is vanilla operating system
- - alpine 3.7
+ - alpine 3.12
  - ffmpeg 4.0 by default
+ - vaapi and qsv (libmxf) support
 
 ## Dependencies
 
@@ -15,12 +16,12 @@ However with a lot changes like:
 ## Build stage
 
 [Build-stage image](build-stage) contains only build of an FFMPEG with a copy of shared objects from the dependency image.
-Image size: 564MB
+Image size: 951MM
 
 ## Runtime
 
 [Runtime image](runtime) contains a copy of binaries, includes, libraries and shares, i.e all necessary pieces for an FFMPEG.
-Image size: 69.5MB
+Image size: 120MB
 
 ## Example application
 
@@ -31,7 +32,7 @@ Image size: 69.5MB at minimum
 
 In order to get all necessary ffmpeg pieces you need to create a Dockerfile with the following instructions:
 ```dockerfile
-FROM timrettop/ffmpeg-alpine:4.0-buildstage as build-stage
+FROM timrettop/ffmpeg-alpine12:4.0-buildstage as build-stage
 FROM <your-final-stage-image>
 
 COPY --from=build-stage /tmp/fakeroot/bin /usr/local/bin
