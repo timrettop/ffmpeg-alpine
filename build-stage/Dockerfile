@@ -1,9 +1,9 @@
-FROM        timrettop/ffmpeg-alpine:4.0-dependencies AS build-stage
-FROM        alpine:3.7
+FROM        timrettop/ffmpeg-alpine12:4.0-dependencies AS build-stage
+FROM        alpine:3.12
 WORKDIR     /tmp/workdir
 
-ARG        PKG_CONFIG_PATH=/usr/local/ffmpeg/pkgconfig
-ARG        LD_LIBRARY_PATH=/usr/local/ffmpeg
+ARG        PKG_CONFIG_PATH=/opt/intel/mediasdk/lib64/pkgconfig:/usr/local/ffmpeg/pkgconfig
+ARG        LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/ffmpeg
 ARG        PREFIX=/usr/local
 ARG        MAKEFLAGS="-j2"
 
@@ -25,17 +25,22 @@ RUN     buildDeps="autoconf \
                    gperf \
                    libtool \
                    make \
-                   python \
+                   python2 \
                    openssl-dev \
                    tar \
                    yasm \
                    zlib-dev" && \
-        apk  add --no-cache ${buildDeps} libva-dev libdrm-dev libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0
+        apk  add --no-cache --update-cache ${buildDeps} libva-dev libva-intel-driver libdrm-dev libgcc libstdc++ ca-certificates libcrypto1.1 libssl1.1
+
+RUN	echo http://dl-2.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+RUN	echo http://dl-2.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories
+RUN	apk add --no-cache --update-cache intel-media-driver-dev
 
 COPY --from=build-stage ${PREFIX}/bin ${PREFIX}/bin
 COPY --from=build-stage ${PREFIX}/lib ${PREFIX}/lib
 COPY --from=build-stage ${PREFIX}/share ${PREFIX}/share
 COPY --from=build-stage ${PREFIX}/include ${PREFIX}/include
+COPY --from=build-stage /opt /opt
 
 
 ## ffmpeg https://ffmpeg.org/
@@ -72,6 +77,7 @@ RUN  \
         --enable-postproc \
         --enable-small \
         --enable-vaapi \
+	--enable-libmfx \
         --enable-version3 \
         --extra-cflags="-I${PREFIX}/include" \
         --extra-ldflags="-L${PREFIX}/lib" \
@@ -85,13 +91,16 @@ RUN \
         mkdir -p /tmp/fakeroot/lib  && \
         ldd ${PREFIX}/bin/ffmpeg | cut -d ' ' -f 3 | strings | xargs -I R cp R /tmp/fakeroot/lib/ && \
         for lib in /tmp/fakeroot/lib/*; do strip --strip-all $lib; done && \
+	cp -r /opt /tmp/fakeroot/opt && \
         cp -r ${PREFIX}/bin /tmp/fakeroot/bin/ && \
         cp -r ${PREFIX}/share /tmp/fakeroot/share/ && \
         cp -r ${PREFIX}/include /tmp/fakeroot/include && \
         LD_LIBRARY_PATH=/tmp/fakeroot/lib /tmp/fakeroot/bin/ffmpeg -buildconf
 
 RUN ls -la /tmp/fakeroot
+ENV LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/lib
 #copy /bin
 #copy /lib
 #copy /include
 #copy /share
+#copy /opt

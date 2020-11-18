@@ -1,4 +1,4 @@
-FROM        alpine:3.7 AS build
+FROM        alpine:3.12 AS build
 
 WORKDIR     /tmp/workdir
 
@@ -24,7 +24,10 @@ ENV         FDKAAC_VERSION=0.1.5      \
             LIBVIDSTAB_VERSION=1.1.0  \
             KVAZAAR_VERSION=1.2.0     \
             AOM_VERSION=v1.0.0        \
+    	    LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib64:/usr/local/lib:/usr/lib:/lib \
+	    PKG_CONFIG_PATH=/opt/intel/mediasdk/lib64/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/lib/pkgconfig \
             SRC=/usr/local
+
 
 ARG         OGG_SHA256SUM="e19ee34711d7af328cb26287f4137e70630e7261b17cbe3cd41011d73a654692  libogg-1.3.2.tar.gz"
 ARG         OPUS_SHA256SUM="77db45a87b51578fbc49555ef1b10926179861d854eb2613207dc79d9ec0a9a9  opus-1.2.tar.gz"
@@ -53,12 +56,17 @@ RUN     buildDeps="autoconf \
                    gperf \
                    libtool \
                    make \
-                   python \
+                   python2 \
                    openssl-dev \
                    tar \
                    yasm \
                    zlib-dev" && \
-        apk  add --update ${buildDeps} libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0
+        apk add --no-cache --update-cache ${buildDeps} libgcc libstdc++ ca-certificates libcrypto1.1 libssl1.1 libva libva-dev 
+
+RUN 	echo http://dl-2.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories
+RUN 	echo http://dl-2.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories
+RUN 	apk add --no-cache --update-cache libva-intel-driver intel-media-driver-dev
+
 
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
 RUN \
@@ -278,7 +286,7 @@ RUN \
         make && \
         make install && \
         rm -rf ${DIR}
-
+## aom
 RUN \
         dir=/tmp/aom ; \
         mkdir -p ${dir} ; \
@@ -292,3 +300,13 @@ RUN \
         make ; \
         make install ; \
         rm -rf ${dir}
+## Intel-Media-SDK https://github.com/Intel-Media-SDK/MediaSDK/
+WORKDIR /tmp/libmfx
+RUN \
+	curl -fsSL https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-20.1.1.tar.gz | \
+		tar -xz --strip-components=1 && \
+	mkdir libmfx-build && cd libmfx-build && \
+	cmake -DCMAKE_BUILD_TYPE=MinSizeRel ../ && \
+	make -j $(nproc) && \
+	make -j $(nproc) install
+
